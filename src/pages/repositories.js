@@ -3,7 +3,9 @@ import styles from '@/styles/Repository.module.css'
 import { connect } from 'react-redux'
 import { setSearch, setRepositories } from '@/redux/action/repo/action'
 import {actionType} from "@/redux/action/repo/type";
+import { toast, ToastContainer } from 'react-nextjs-toast'
 import Api from '@/utils/api'
+import Skeleton from "@/components/skeleton";
 const Repositories = (props) => {
     const onSearch = (event) => {
         props.setSearch(event.target.value)
@@ -16,7 +18,7 @@ const Repositories = (props) => {
             }
         } catch (e) {
             props.setRepositories([])
-            console.log("e: ", e)
+            showErrorNotify(e.response.data.message)
             throw e
         }
     }
@@ -38,6 +40,13 @@ const Repositories = (props) => {
         let year = d.getFullYear()
         return `${month} ${day}, ${year}`
     }
+    const showErrorNotify = (message) => {
+        toast.notify(`Username ${message}`, {
+            duration: 10,
+            type: "error",
+            title: "Fail"
+        })
+    }
     return (
         <>
             <Head>
@@ -55,6 +64,9 @@ const Repositories = (props) => {
                 </div>
                 <div className={styles.space}></div>
                 <div className={`${styles.grid}`}>
+                    {
+                        ['','',''].map(() => <div className={'mx-15'}><Skeleton width={'inherit'} height={300}/></div>)
+                    }
                     {
                         props.repositories.length > 0 && props.repositories.map((repo, key) =>
                             <div className={styles.card} key={key}>
@@ -80,6 +92,7 @@ const Repositories = (props) => {
                         )
                     }
                 </div>
+                <ToastContainer />
             </main>
         </>
     )
