@@ -1,3 +1,3 @@
-import { setSearch, setRepositories } from './repo/action'
+import { setSearch, setRepositories, setLoading } from './repo/action'
 
-export default { setSearch, setRepositories }
+export default { setSearch, setRepositories, setLoading }

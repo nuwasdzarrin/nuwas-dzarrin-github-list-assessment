@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import styles from '@/styles/Repository.module.css'
 import { connect } from 'react-redux'
-import { setSearch, setRepositories } from '@/redux/action/repo/action'
+import { setSearch, setRepositories, setLoading } from '@/redux/action/repo/action'
 import {actionType} from "@/redux/action/repo/type";
 import { toast, ToastContainer } from 'react-nextjs-toast'
 import Api from '@/utils/api'
@@ -12,6 +12,7 @@ const Repositories = (props) => {
     }
     const fetchRepository = async () => {
         try {
+            props.setLoading(true)
             let res = await Api.repos.list(props.username,{})
             if (res.status === 200) {
                 props.setRepositories(res.data)
@@ -20,6 +21,8 @@ const Repositories = (props) => {
             props.setRepositories([])
             showErrorNotify(e.response.data.message)
             throw e
+        } finally {
+            props.setLoading(false)
         }
     }
     const convertLangToColor = (lang) => {
@@ -65,33 +68,38 @@ const Repositories = (props) => {
                 <div className={styles.space}></div>
                 <div className={`${styles.grid}`}>
                     {
-                        ['','',''].map(() => <div className={'mx-15'}><Skeleton width={'inherit'} height={300}/></div>)
-                    }
-                    {
-                        props.repositories.length > 0 && props.repositories.map((repo, key) =>
-                            <div className={styles.card} key={key}>
-                                <div>
-                                    <a href={repo.html_url} target="_blank">
-                                        <div className={styles.repoName}>{repo.name}</div>
-                                    </a>
-                                    <p>{repo.description || '-'}</p>
+                        props.loading ?
+                            ['','',''].map(() =>
+                                <div className={'mx-15'}>
+                                    <Skeleton width={'inherit'} height={300}/>
                                 </div>
-                                <div className={styles.flexCenterBetween}>
-                                    {
-                                        repo.language ?
-                                            <div className={styles.flexCenter}>
-                                                <div className={styles.langLogo}
-                                                     style={{backgroundColor: convertLangToColor(repo.language)}}></div>
-                                                <div className={styles.repoLang}>{repo.language}</div>
-                                            </div> :
-                                            <div></div>
-                                    }
-                                    <div className={styles.repoLang}>Updated on {dateFormat(repo.updated_at)}</div>
+                            ) : props.repositories.length > 0 && props.repositories.map((repo, key) =>
+                                <div className={styles.card} key={key}>
+                                    <div>
+                                        <a href={repo.html_url} target="_blank">
+                                            <div className={styles.repoName}>{repo.name}</div>
+                                        </a>
+                                        <p>{repo.description || '-'}</p>
+                                    </div>
+                                    <div className={styles.flexCenterBetween}>
+                                        {
+                                            repo.language ?
+                                                <div className={styles.flexCenter}>
+                                                    <div className={styles.langLogo}
+                                                         style={{backgroundColor: convertLangToColor(repo.language)}}></div>
+                                                    <div className={styles.repoLang}>{repo.language}</div>
+                                                </div> :
+                                                <div></div>
+                                        }
+                                        <div className={styles.repoLang}>Updated on {dateFormat(repo.updated_at)}</div>
+                                    </div>
                                 </div>
-                            </div>
-                        )
+                            )
                     }
                 </div>
+                {
+                    !props.loading && props.repositories.length === 0 && <div className={styles.dataNotFound}> Data not found</div>
+                }
                 <ToastContainer />
             </main>
         </>
@@ -100,12 +108,13 @@ const Repositories = (props) => {
 
 const mapStateToProps = (state) => ({
     username: state.repo.search,
-    repositories: state.repo.repositories
+    repositories: state.repo.repositories,
+    loading: state.repo.loading,
 })
 
 const mapDispatchToProps = (dispatch) => ({
     setSearch: (search) => dispatch(setSearch(actionType.setSearch, { search: search })),
-    setRepositories: (data) => dispatch(setRepositories(actionType.setRepo, { repositories: data }))
+    setRepositories: (data) => dispatch(setRepositories(actionType.setRepo, { repositories: data })),
+    setLoading: (data) => dispatch(setLoading(actionType.setLoading, { loading: data }))
 })
-
 export default connect(mapStateToProps, mapDispatchToProps)(Repositories)
