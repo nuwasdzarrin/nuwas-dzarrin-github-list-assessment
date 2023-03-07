@@ -1,4 +1,4 @@
 export const initialState = {
-    search: '',
+    search: 'search awal',
     repositories: []
 }
